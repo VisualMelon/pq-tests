@@ -271,13 +271,13 @@ namespace PriorityQueue
 
         public bool TryUpdate(TElement element, TPriority priority)
         {
-            if (!Index.ContainsKey(element))
+            if (!Index.TryGetValue(element, out var index))
             {
                 return false;
             }
             else
             {
-                _queue.Add(new PriorityPair<TElement, TPriority>(element, priority));
+                _queue.Update(index, new PriorityPair<TElement, TPriority>(element, priority));
                 return true;
             }
         }
