@@ -170,7 +170,7 @@ namespace PriorityQueue.Tests
                 T[] DeDup (T[] input)
                 {
                     return input
-                        .Where(input => input is not null)
+                        .Where(input => input != null)
                         .Distinct()
                         .ToArray();
                 }
