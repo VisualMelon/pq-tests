@@ -26,10 +26,35 @@ namespace PriorityQueue.Benchmarks
         }
     }
 
+    public struct IntPriorityPairProvider2<T> : IPriorityProvider2<PriorityPair<T, int>, int>
+    {
+        public void Cleared()
+        {
+        }
+
+        public int Compare(int l, int r)
+        {
+            return l.CompareTo(r);
+        }
+
+        public int GetPriority(PriorityPair<T, int> pair)
+        {
+            return pair.Priority;
+        }
+
+        public void Moved(PriorityPair<T, int> t, int i)
+        {
+        }
+
+        public void Removed(PriorityPair<T, int> t, int i)
+        {
+        }
+    }
+
     [MemoryDiagnoser]
     public class HeapBenchmarks
     {
-        [Params(30, 1_000, 30_000, 100_100, 3_000_000)]
+        [Params(/*30,*/ 1_000, /*30_000, */100_100, 3_000_000)]
         public int Size;
 
         private int[] _priorities;
@@ -40,6 +65,8 @@ namespace PriorityQueue.Benchmarks
         private SimplePriorityQueue<int, int> _simplePriorityQueue;
         private UpdateableUniquePriorityQueue<int, int> _updateableUniquePriorityQueue;
         private GenericPriorityQueue<PriorityPair<int, int>, IntPriorityPairProvider<int>> _intPairPriorityQueue;
+        private SimplePriorityQueue2<PriorityPair<int, int>, int> _simplePriorityQueue2;
+        private GenericPriorityQueue2<PriorityPair<int, int>, int, IntPriorityPairProvider2<int>> _intPairPriorityQueue2;
 
         [GlobalSetup]
         public void Initialize()
@@ -58,6 +85,8 @@ namespace PriorityQueue.Benchmarks
             _simplePriorityQueue = new SimplePriorityQueue<int, int>(Comparer<int>.Default);
             _updateableUniquePriorityQueue = new UpdateableUniquePriorityQueue<int, int>(EqualityComparer<int>.Default, Comparer<int>.Default);
             _intPairPriorityQueue = new GenericPriorityQueue<PriorityPair<int, int>, IntPriorityPairProvider<int>>(new IntPriorityPairProvider<int>());
+            _simplePriorityQueue2 = new SimplePriorityQueue2<PriorityPair<int, int>, int>(Comparer<int>.Default, pair => pair.Priority);
+            _intPairPriorityQueue2 = new GenericPriorityQueue2<PriorityPair<int, int>, int, IntPriorityPairProvider2<int>>(new IntPriorityPairProvider2<int>());
         }
 
         [Benchmark]
@@ -83,7 +112,7 @@ namespace PriorityQueue.Benchmarks
             }
         }
 
-        [Benchmark]
+        //[Benchmark] disabled updatables
         public void PrioritySet()
         {
             var queue = _prioritySet;
@@ -106,7 +135,7 @@ namespace PriorityQueue.Benchmarks
             }
         }
 
-        [Benchmark]
+        //[Benchmark] disabled updatables
         public void PairingHeap()
         {
             var heap = _pairingHeap;
@@ -152,7 +181,7 @@ namespace PriorityQueue.Benchmarks
             }
         }
 
-        [Benchmark]
+        //[Benchmark] disabled updatables
         public void UpdateableUniquePriorityQueue()
         {
             var queue = _updateableUniquePriorityQueue;
@@ -179,6 +208,52 @@ namespace PriorityQueue.Benchmarks
         public void IntPairPriorityQueue()
         {
             var queue = _intPairPriorityQueue;
+            var priorities = _priorities;
+
+            for (int i = 0; i < Size; i++)
+            {
+                queue.Add(new PriorityPair<int, int>(i, priorities[i]));
+            }
+
+            for (int i = Size; i < 2 * Size; i++)
+            {
+                queue.RemoveMin();
+                queue.Add(new PriorityPair<int, int>(i, priorities[i]));
+            }
+
+            while (queue.Count > 0)
+            {
+                queue.RemoveMin();
+            }
+        }
+
+        [Benchmark]
+        public void SimplePriorityQueue2()
+        {
+            var queue = _simplePriorityQueue2;
+            var priorities = _priorities;
+
+            for (int i = 0; i < Size; i++)
+            {
+                queue.Enqueue(new PriorityPair<int, int>(i, priorities[i]));
+            }
+
+            for (int i = Size; i < 2 * Size; i++)
+            {
+                queue.RemoveMin();
+                queue.Enqueue(new PriorityPair<int, int>(i, priorities[i]));
+            }
+
+            while (queue.Count > 0)
+            {
+                queue.RemoveMin();
+            }
+        }
+
+        [Benchmark]
+        public void IntPairPriorityQueue2()
+        {
+            var queue = _intPairPriorityQueue2;
             var priorities = _priorities;
 
             for (int i = 0; i < Size; i++)
